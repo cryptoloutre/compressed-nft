@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "@metaplex-foundation/mpl-bubblegum": "^0.6.2",
+    "@metaplex-foundation/mpl-token-metadata": "^2.9.1",
+    "@solana/spl-account-compression": "^0.1.7",
+    "@solana/spl-token": "^0.3.7",
+    "@solana/web3.js": "^1.74.0"
+  }
+}
