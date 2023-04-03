@@ -1,5 +1,7 @@
 # Compressed NFTs
 
+This repo contains scripts to create compressed NFTs. Compression is a new technology using Merkle tree wich allows to reduce network storage costs. In the case of NFTs, compression enables the mint of NFTs for a fraction of the cost as before. You can learn more about compression [here](https://spl.solana.com/account-compression) and [here](https://www.alchemy.com/overviews/compressed-nfts).
+For an explanation of how scripts work, you can read this [medium article](https://medium.com/@laloutre/how-to-mint-compressed-nfts-dfcbee0ef51e)
 
 ## Getting Started
 
