@@ -27,10 +27,10 @@ npm install
 5. Run the following command to create your Merkle tree and your NFT collection
 
 ```
-npx ts.node createTreeAndCollection.ts
+npx ts-node createTreeAndCollection.ts
 ```
 6. Once the execution is finished, run the following command to mint your compressed NFTs
 
 ```
-npx ts.node mintCompressedNFT.ts
+npx ts-node mintCompressedNFT.ts
 ```
