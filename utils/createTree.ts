@@ -1,73 +1,30 @@
-import {
-  Connection,
-  PublicKey,
-  Keypair,
-  Transaction,
-  sendAndConfirmTransaction,
-} from "@solana/web3.js";
-import {
-  PROGRAM_ID as BUBBLEGUM_PROGRAM_ID,
-  createCreateTreeInstruction,
-} from "@metaplex-foundation/mpl-bubblegum";
-import {
-  SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
-  createAllocTreeIx,
-  ValidDepthSizePair,
-  SPL_NOOP_PROGRAM_ID,
-} from "@solana/spl-account-compression";
+import { createTree, mplBubblegum } from "@metaplex-foundation/mpl-bubblegum";
+import { createSignerFromKeypair, generateSigner, signerIdentity } from "@metaplex-foundation/umi";
+import { canopyDepth, connection, maxBufferSize, maxDepth, privateKey } from "../config";
+import { base58 } from "@metaplex-foundation/umi/serializers";
+import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
+import { setComputeUnitLimit, setComputeUnitPrice } from "@metaplex-foundation/mpl-toolbox";
 
-export async function createTree(
-  connection: Connection,
-  payer: Keypair,
-  maxDepthSizePair: ValidDepthSizePair,
-  canopyDepth: number,
-) {
+export async function createMerkleTree() {
+
+  const umi = createUmi(connection).use(mplBubblegum());
+  const keypair = umi.eddsa.createKeypairFromSecretKey(new Uint8Array(privateKey));
+  const signer = createSignerFromKeypair(umi, keypair);
+  umi.use(signerIdentity(signer));
 
   console.log("Creating the Merkle tree...\n")
-  const merkleTreeKeypair = Keypair.generate();
+  const merkleTree = generateSigner(umi);
+  const tx = await (await createTree(umi, {
+    merkleTree,
+    maxDepth: maxDepth,
+    maxBufferSize: maxBufferSize,
+    canopyDepth: canopyDepth
+  }))
+    .add(setComputeUnitLimit(umi, { units: 45000 }))
+    .add(setComputeUnitPrice(umi, { microLamports: 300000 }))
+    .sendAndConfirm(umi, { confirm: { commitment: "confirmed" } });
 
-  const allocTreeIx = await createAllocTreeIx(
-    connection,
-    merkleTreeKeypair.publicKey,
-    payer.publicKey,
-    maxDepthSizePair,
-    canopyDepth
-  );
-
-  const [treeAuthority, _bump] = PublicKey.findProgramAddressSync(
-    [Buffer.from(merkleTreeKeypair.publicKey.toBytes())],
-    BUBBLEGUM_PROGRAM_ID
-  );
-
-  const createTreeIxAccounts = {
-    treeAuthority: treeAuthority,
-    merkleTree: merkleTreeKeypair.publicKey,
-    payer: payer.publicKey,
-    treeCreator: payer.publicKey,
-    logWrapper: SPL_NOOP_PROGRAM_ID,
-    compressionProgram: SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
-  };
-
-  const createTreeIxArgs = {
-    maxDepth: maxDepthSizePair.maxDepth,
-    maxBufferSize: maxDepthSizePair.maxBufferSize,
-    public: false,
-  };
-
-  const createTreeIx = createCreateTreeInstruction(
-    createTreeIxAccounts,
-    createTreeIxArgs
-  );
-
-  const Tx = new Transaction().add(allocTreeIx).add(createTreeIx);
-
-  const signature = await sendAndConfirmTransaction(connection, Tx, [
-    payer,
-    merkleTreeKeypair,
-  ]);
   console.log("Tree successfuly created!");
-  console.log("Transaction signature: ", signature, "\n");
-
-
-  return merkleTreeKeypair.publicKey.toBase58()
+  console.log("Transaction signature: ", base58.deserialize(tx.signature)[0], "\n");
+  return merkleTree.publicKey
 }
