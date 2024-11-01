@@ -109,11 +109,13 @@ export function isValidDepthSizePair() {
         }
     ];
 
-    if (validDepthSizePair.includes({maxDepth: maxDepth, maxBufferSize: maxBufferSize})) {
-        return true
-    }
-    else {
-        return false
-    }
+    let isValid: boolean = false;
+    validDepthSizePair.map((pair) => {
+        if (pair.maxBufferSize == maxBufferSize && pair.maxDepth == maxDepth) {
+            isValid = true
+        }
+    })
+
+    return isValid
 
 }
